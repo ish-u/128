@@ -4,7 +4,7 @@
 void setup()
 {
   pinMode(LED_BUILTIN, OUTPUT);
-  Serial.begin(921600);
+  Serial.begin(115200);
   Serial.println("Hello from ESP32 Setup");
 }
 
