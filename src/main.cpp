@@ -3,11 +3,18 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <WiFi.h>
+#include <time.h>
 #include <secrets.h>
 
 #define LED_BUILTIN 2  
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
+
+// NTP
+const char* ntpServer = "pool.ntp.org";
+const long gmtOffset_sec = GMT_OFFSET_SEC;
+const int daylightOffset_sec = DAYLGHT_OFFSET_SEC;
+struct tm timeInfo;
 
 // OLED
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
@@ -27,6 +34,8 @@ void initWiFi() {
       case ARDUINO_EVENT_WIFI_STA_GOT_IP:
         Serial.println(WiFi.localIP());
         digitalWrite(LED_BUILTIN, HIGH);
+        configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+        Serial.println("Time synced!");
         break;
       case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
         digitalWrite(LED_BUILTIN, LOW);
@@ -66,4 +75,17 @@ void setup()
 
 void loop()
 {
+  if (getLocalTime(&timeInfo)) {
+    Serial.printf("%02d:%02d:%02d  %02d/%02d/%04d\n",
+      timeInfo.tm_hour,
+      timeInfo.tm_min,
+      timeInfo.tm_sec,
+      timeInfo.tm_mday,
+      timeInfo.tm_mon + 1,   // months start from 0!
+      timeInfo.tm_year + 1900 // years from 1900!
+    );
+  }
+  else {
+    Serial.println("Time not available yet...");
+  }
 }
