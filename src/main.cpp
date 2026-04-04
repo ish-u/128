@@ -3,36 +3,47 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <WiFi.h>
-
 #include <secrets.h>
+
+#define LED_BUILTIN 2  
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+
+// OLED
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 // NETWORK
 const char* ssid = WIFI_SSID;
 const char* password = WIFI_PASSWORD;
 void initWiFi() {
   WiFi.mode(WIFI_MODE_STA);
+  WiFi.onEvent(
+    [](WiFiEvent_t event) {
+      switch (event)
+      {
+      case ARDUINO_EVENT_WIFI_STA_CONNECTED:
+        Serial.println("WiFi Connected!");
+        break;
+      case ARDUINO_EVENT_WIFI_STA_GOT_IP:
+        Serial.println(WiFi.localIP());
+        digitalWrite(LED_BUILTIN, HIGH);
+        break;
+      case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
+        digitalWrite(LED_BUILTIN, LOW);
+        Serial.println("WiFi Disconnected");
+        break;
+      }
+    }
+  );
+
   WiFi.begin(ssid, password);
-
-  Serial.println("Connecting to WiFi");
-  while (WiFi.status() != WL_CONNECTED) {
-    Serial.print(".");
-    delay(1000);
-  }
-
-  Serial.println(WiFi.localIP());
-  Serial.print("RRSI: ");
-  Serial.println(WiFi.RSSI());
 }
-
-
-// OLED
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 void setup()
 {
   Serial.begin(115200);
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);
 
   initWiFi();
 
