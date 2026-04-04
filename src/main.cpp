@@ -15,6 +15,7 @@
 enum Face {
   FACE_DEEFAULT,
   FACE_CLOCK,
+  FACE_SIN_WAVE,
   FACE_COUNT
 };
 int CURRENT_FACE = FACE_DEEFAULT;
@@ -101,6 +102,48 @@ void ClockFace() {
   }
   display.display();
 }
+class SinWave {
+  int SIN_AMP = 24;
+  int SIN_DIR = 1;
+  float SIN_T = 0;
+  float SIN_BALL_X = 0;
+
+
+public:
+  void show() {
+    display.clearDisplay();
+
+    for (int i = 0; i < 127; i++)
+    {
+      float angle = i * 0.1;
+      int y = 32 + SIN_AMP * sin(angle + SIN_T);
+      display.drawPixel(i, y, SSD1306_WHITE);
+    }
+
+    float angle = SIN_BALL_X * 0.1;
+    int y = 32 + SIN_AMP * sin(angle + SIN_T);
+    display.drawCircle(SIN_BALL_X, y, 5, SSD1306_WHITE);
+
+    display.display();
+
+    SIN_T += 0.1;
+
+    SIN_BALL_X += 1;
+    if (SIN_BALL_X >= 128)
+    {
+      SIN_BALL_X = 0;
+    }
+  }
+
+  void reset() {
+    SIN_AMP = 24;
+    SIN_DIR = 1;
+    SIN_T = 0;
+    SIN_BALL_X = 0;
+  }
+
+};
+SinWave sinWave;
 
 void setup()
 {
@@ -127,6 +170,7 @@ void loop()
   int state = digitalRead(SET_BUTTON_PIN);
   if (state == LOW) {
     CURRENT_FACE = (Face)(CURRENT_FACE + 1) % FACE_COUNT;
+    sinWave.reset();
     delay(300);
   }
 
@@ -137,6 +181,9 @@ void loop()
     break;
   case FACE_CLOCK:
     ClockFace();
+    break;
+  case FACE_SIN_WAVE:
+    sinWave.show();
     break;
   default:
     DefaultFace();
