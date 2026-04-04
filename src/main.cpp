@@ -10,10 +10,14 @@
 #define SET_BUTTON_PIN 18 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
-#define FACE_LENGTH 2
 
 // FACE
-int CURRENT_FACE = 0;
+enum Face {
+  FACE_DEEFAULT,
+  FACE_CLOCK,
+  FACE_COUNT
+};
+int CURRENT_FACE = FACE_DEEFAULT;
 
 // NTP
 const char* ntpServer = "time.google.com";
@@ -53,40 +57,17 @@ void initWiFi() {
   WiFi.begin(ssid, password);
 }
 
-void setup()
-{
-  Serial.begin(115200);
-  pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, LOW);
-  pinMode(SET_BUTTON_PIN, INPUT_PULLUP);
-
-  initWiFi();
-
-  Wire.begin(21, 22);
-  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
-  {
-    Serial.println("SSD1306 init failed");
-    while (true)
-      ;
-  }
-
+// FACES
+void DefaultFace() {
   display.clearDisplay();
-  display.setTextSize(1);
+  display.setTextSize(3);
   display.setTextColor(SSD1306_WHITE);
-  display.setCursor(0, 0);
-
-  display.println("Hello World!");
+  display.setCursor((SCREEN_WIDTH - 18 * 3) / 2, (SCREEN_HEIGHT - 16) / 2);
+  display.println("128");
   display.display();
 }
 
-void loop()
-{
-  int state = digitalRead(SET_BUTTON_PIN);
-  if (state == LOW) {
-    CURRENT_FACE = (CURRENT_FACE + 1) % FACE_LENGTH;
-    delay(300);
-  }
-
+void ClockFace() {
 
   if (getLocalTime(&timeInfo, 0)) {
     display.clearDisplay();
@@ -114,8 +95,52 @@ void loop()
     const char* message = "...";
     display.clearDisplay();
     display.drawRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, SSD1306_WHITE);
+    display.setTextSize(1);
     display.setCursor((SCREEN_WIDTH - strlen(message) * 6) / 2, (SCREEN_HEIGHT - 8) / 2);
     display.printf("%s\n", message);
   }
   display.display();
+}
+
+void setup()
+{
+  Serial.begin(115200);
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);
+  pinMode(SET_BUTTON_PIN, INPUT_PULLUP);
+
+  initWiFi();
+
+  Wire.begin(21, 22);
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
+  {
+    Serial.println("SSD1306 init failed");
+    while (true)
+      ;
+  }
+
+  display.setTextColor(SSD1306_WHITE);
+}
+
+void loop()
+{
+  int state = digitalRead(SET_BUTTON_PIN);
+  if (state == LOW) {
+    CURRENT_FACE = (Face)(CURRENT_FACE + 1) % FACE_COUNT;
+    delay(300);
+  }
+
+  switch (CURRENT_FACE)
+  {
+  case FACE_DEEFAULT:
+    DefaultFace();
+    break;
+  case FACE_CLOCK:
+    ClockFace();
+    break;
+  default:
+    DefaultFace();
+    break;
+  }
+
 }
