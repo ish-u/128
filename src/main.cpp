@@ -11,7 +11,7 @@
 #define SCREEN_HEIGHT 64
 
 // NTP
-const char* ntpServer = "pool.ntp.org";
+const char* ntpServer = "time.google.com";
 const long gmtOffset_sec = GMT_OFFSET_SEC;
 const int daylightOffset_sec = DAYLGHT_OFFSET_SEC;
 struct tm timeInfo;
@@ -75,17 +75,34 @@ void setup()
 
 void loop()
 {
-  if (getLocalTime(&timeInfo)) {
-    Serial.printf("%02d:%02d:%02d  %02d/%02d/%04d\n",
+  if (getLocalTime(&timeInfo, 0)) {
+    display.clearDisplay();
+    display.drawRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, SSD1306_WHITE);
+
+    display.setTextSize(2);// Size 2 -> 12x16px
+    // 12 * 8 => Char Width * Number of Chars
+    display.setCursor((SCREEN_WIDTH - 12 * 8) / 2, 8);
+    display.printf("%02d:%02d:%02d\n",
       timeInfo.tm_hour,
       timeInfo.tm_min,
-      timeInfo.tm_sec,
+      timeInfo.tm_sec
+    );
+
+    display.setTextSize(1); // Size 1 -> 6x8px
+    // 6 * 10 => Char Width * Number of Chars
+    display.setCursor((SCREEN_WIDTH - 6 * 10) / 2, (SCREEN_HEIGHT - 8 * 2));
+    display.printf("%02d/%02d/%04d\n",
       timeInfo.tm_mday,
-      timeInfo.tm_mon + 1,   // months start from 0!
-      timeInfo.tm_year + 1900 // years from 1900!
+      timeInfo.tm_mon + 1,
+      timeInfo.tm_year + 1900
     );
   }
   else {
-    Serial.println("Time not available yet...");
+    const char* message = "...";
+    display.clearDisplay();
+    display.drawRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, SSD1306_WHITE);
+    display.setCursor((SCREEN_WIDTH - strlen(message) * 6) / 2, (SCREEN_HEIGHT - 8) / 2);
+    display.printf("%s\n", message);
   }
+  display.display();
 }
