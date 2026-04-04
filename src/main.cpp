@@ -1,18 +1,32 @@
 #include <Arduino.h>
-#define LED_BUILTIN 2
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 void setup()
 {
-  pinMode(LED_BUILTIN, OUTPUT);
-  Serial.begin(115200);
-  Serial.println("Hello from ESP32 Setup");
+  Wire.begin(21, 22);
+
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
+  {
+    Serial.println("SSD1306 init failed");
+    while (true)
+      ;
+  }
+
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+
+  display.println("Hello World!");
+  display.display();
 }
 
 void loop()
 {
-  delay(1000);
-  digitalWrite(LED_BUILTIN, HIGH);
-  Serial.println("Hello from ESP32 Loop");
-  delay(1000);
-  digitalWrite(LED_BUILTIN, LOW);
 }
