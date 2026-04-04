@@ -6,9 +6,14 @@
 #include <time.h>
 #include <secrets.h>
 
-#define LED_BUILTIN 2  
+#define LED_BUILTIN 2 
+#define SET_BUTTON_PIN 18 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
+#define FACE_LENGTH 2
+
+// FACE
+int CURRENT_FACE = 0;
 
 // NTP
 const char* ntpServer = "time.google.com";
@@ -53,6 +58,7 @@ void setup()
   Serial.begin(115200);
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
+  pinMode(SET_BUTTON_PIN, INPUT_PULLUP);
 
   initWiFi();
 
@@ -75,6 +81,13 @@ void setup()
 
 void loop()
 {
+  int state = digitalRead(SET_BUTTON_PIN);
+  if (state == LOW) {
+    CURRENT_FACE = (CURRENT_FACE + 1) % FACE_LENGTH;
+    delay(300);
+  }
+
+
   if (getLocalTime(&timeInfo, 0)) {
     display.clearDisplay();
     display.drawRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, SSD1306_WHITE);
