@@ -5,21 +5,12 @@
 #include <WiFi.h>
 #include <time.h>
 #include <secrets.h>
+#include <map>
 
 #define LED_BUILTIN 2 
 #define SET_BUTTON_PIN 18 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
-
-// FACE
-enum Face {
-  FACE_DEEFAULT,
-  FACE_CLOCK,
-  FACE_BINARY_CLOCK,
-  FACE_SIN_WAVE,
-  FACE_COUNT
-};
-int CURRENT_FACE = FACE_DEEFAULT;
 
 // NTP
 const char* ntpServer = "time.google.com";
@@ -60,14 +51,35 @@ void initWiFi() {
 }
 
 // FACES
-void DefaultFace() {
-  display.clearDisplay();
-  display.setTextSize(3);
-  display.setTextColor(SSD1306_WHITE);
-  display.setCursor((SCREEN_WIDTH - 18 * 3) / 2, (SCREEN_HEIGHT - 16) / 2);
-  display.println("128");
-  display.display();
-}
+enum FACE_TYPE {
+  FACE_DEEFAULT,
+  FACE_CLOCK,
+  FACE_BINARY_CLOCK,
+  FACE_SIN_WAVE,
+  FACE_COUNT
+};
+FACE_TYPE CURRENT_FACE = FACE_DEEFAULT;
+class Face {
+public:
+  virtual void  show() = 0;
+  virtual void reset() = 0;
+  virtual ~Face() {}
+};
+std::map<FACE_TYPE, Face*> FACES;
+
+class DefaultFace : public Face {
+public:
+  void show() {
+    display.clearDisplay();
+    display.setTextSize(3);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor((SCREEN_WIDTH - 18 * 3) / 2, (SCREEN_HEIGHT - 16) / 2);
+    display.println("128");
+    display.display();
+  }
+  void reset() {}
+};
+DefaultFace* DEFAULT_FACE = new DefaultFace();
 
 void ClockFace() {
 
@@ -217,34 +229,28 @@ void setup()
   }
 
   display.setTextColor(SSD1306_WHITE);
+
+  FACES[FACE_TYPE::FACE_DEEFAULT] = new DefaultFace();
 }
 
 void loop()
 {
   int state = digitalRead(SET_BUTTON_PIN);
+  Serial.println(CURRENT_FACE);
   if (state == LOW) {
-    CURRENT_FACE = (Face)(CURRENT_FACE + 1) % FACE_COUNT;
-    sinWave.reset();
+    CURRENT_FACE = static_cast<FACE_TYPE>(
+      (static_cast<int>(CURRENT_FACE) + 1) % FACES.size()
+      );
+    if (FACES[CURRENT_FACE]) {
+      FACES.at(CURRENT_FACE)->reset();
+    }
     delay(300);
   }
-
-  switch (CURRENT_FACE)
-  {
-  case FACE_DEEFAULT:
-    DefaultFace();
-    break;
-  case FACE_CLOCK:
-    ClockFace();
-    break;
-  case FACE_BINARY_CLOCK:
-    BinaryClockFace();
-    break;
-  case FACE_SIN_WAVE:
-    sinWave.show();
-    break;
-  default:
-    DefaultFace();
-    break;
+  if (FACES[CURRENT_FACE]) {
+    FACES[CURRENT_FACE]->show();
+  }
+  else {
+    DEFAULT_FACE->show();
   }
 
 }
