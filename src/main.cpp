@@ -81,99 +81,107 @@ public:
 };
 DefaultFace* DEFAULT_FACE = new DefaultFace();
 
-void ClockFace() {
+class Clock : public Face {
+public:
+  void show() {
+    if (getLocalTime(&timeInfo, 0)) {
+      display.clearDisplay();
+      display.drawRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, SSD1306_WHITE);
 
-  if (getLocalTime(&timeInfo, 0)) {
-    display.clearDisplay();
-    display.drawRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, SSD1306_WHITE);
+      display.setTextSize(2);// Size 2 -> 12x16px
+      // 12 * 8 => Char Width * Number of Chars
+      display.setCursor((SCREEN_WIDTH - 12 * 8) / 2, 8);
+      display.printf("%02d:%02d:%02d\n",
+        timeInfo.tm_hour,
+        timeInfo.tm_min,
+        timeInfo.tm_sec
+      );
 
-    display.setTextSize(2);// Size 2 -> 12x16px
-    // 12 * 8 => Char Width * Number of Chars
-    display.setCursor((SCREEN_WIDTH - 12 * 8) / 2, 8);
-    display.printf("%02d:%02d:%02d\n",
-      timeInfo.tm_hour,
-      timeInfo.tm_min,
-      timeInfo.tm_sec
-    );
-
-    display.setTextSize(1); // Size 1 -> 6x8px
-    // 6 * 10 => Char Width * Number of Chars
-    display.setCursor((SCREEN_WIDTH - 6 * 10) / 2, (SCREEN_HEIGHT - 8 * 2));
-    display.printf("%02d/%02d/%04d\n",
-      timeInfo.tm_mday,
-      timeInfo.tm_mon + 1,
-      timeInfo.tm_year + 1900
-    );
-  }
-  else {
-    const char* message = "...";
-    display.clearDisplay();
-    display.drawRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, SSD1306_WHITE);
-    display.setTextSize(1);
-    display.setCursor((SCREEN_WIDTH - strlen(message) * 6) / 2, (SCREEN_HEIGHT - 8) / 2);
-    display.printf("%s\n", message);
-  }
-  display.display();
-}
-
-void BinaryClockFace() {
-  if (getLocalTime(&timeInfo, 0)) {
-    display.clearDisplay();
-    display.drawRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, SSD1306_WHITE);
-
-    int hour =
-      timeInfo.tm_hour;
-    for (int i = 5; i >= 0; i--) {
-      if ((hour >> i) & 1) {
-        display.fillRect((5 - i) * 21 + 2, 2, 19, 19, SSD1306_WHITE);
-      }
-      else {
-        display.drawRect((5 - i) * 21 + 2, 2, 19, 19, SSD1306_WHITE);
-      }
+      display.setTextSize(1); // Size 1 -> 6x8px
+      // 6 * 10 => Char Width * Number of Chars
+      display.setCursor((SCREEN_WIDTH - 6 * 10) / 2, (SCREEN_HEIGHT - 8 * 2));
+      display.printf("%02d/%02d/%04d\n",
+        timeInfo.tm_mday,
+        timeInfo.tm_mon + 1,
+        timeInfo.tm_year + 1900
+      );
     }
-
-
-    int minute =
-      timeInfo.tm_min;
-    for (int i = 5; i >= 0; i--) {
-      if ((minute >> i) & 1) {
-        display.fillRect((5 - i) * 21 + 2, 22, 19, 19, SSD1306_WHITE);
-      }
-      else {
-        display.drawRect((5 - i) * 21 + 2, 22, 19, 19, SSD1306_WHITE);
-      }
+    else {
+      const char* message = "...";
+      display.clearDisplay();
+      display.drawRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, SSD1306_WHITE);
+      display.setTextSize(1);
+      display.setCursor((SCREEN_WIDTH - strlen(message) * 6) / 2, (SCREEN_HEIGHT - 8) / 2);
+      display.printf("%s\n", message);
     }
+    display.display();
+  }
+
+  void reset() {}
+};
+
+class BinaryClock : public Face {
+public:
+  void show() {
+    if (getLocalTime(&timeInfo, 0)) {
+      display.clearDisplay();
+      display.drawRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, SSD1306_WHITE);
+
+      int hour =
+        timeInfo.tm_hour;
+      for (int i = 5; i >= 0; i--) {
+        if ((hour >> i) & 1) {
+          display.fillRect((5 - i) * 21 + 2, 2, 19, 19, SSD1306_WHITE);
+        }
+        else {
+          display.drawRect((5 - i) * 21 + 2, 2, 19, 19, SSD1306_WHITE);
+        }
+      }
 
 
-    int second =
-      timeInfo.tm_sec;
-    for (int i = 5; i >= 0; i--) {
-      if ((second >> i) & 1) {
-        display.fillRect((5 - i) * 21 + 2, 42, 19, 19, SSD1306_WHITE);
+      int minute =
+        timeInfo.tm_min;
+      for (int i = 5; i >= 0; i--) {
+        if ((minute >> i) & 1) {
+          display.fillRect((5 - i) * 21 + 2, 22, 19, 19, SSD1306_WHITE);
+        }
+        else {
+          display.drawRect((5 - i) * 21 + 2, 22, 19, 19, SSD1306_WHITE);
+        }
       }
-      else {
-        display.drawRect((5 - i) * 21 + 2, 42, 19, 19, SSD1306_WHITE);
+
+
+      int second =
+        timeInfo.tm_sec;
+      for (int i = 5; i >= 0; i--) {
+        if ((second >> i) & 1) {
+          display.fillRect((5 - i) * 21 + 2, 42, 19, 19, SSD1306_WHITE);
+        }
+        else {
+          display.drawRect((5 - i) * 21 + 2, 42, 19, 19, SSD1306_WHITE);
+        }
       }
+
     }
-
+    else {
+      const char* message = "...";
+      display.clearDisplay();
+      display.drawRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, SSD1306_WHITE);
+      display.setTextSize(1);
+      display.setCursor((SCREEN_WIDTH - strlen(message) * 6) / 2, (SCREEN_HEIGHT - 8) / 2);
+      display.printf("%s\n", message);
+    }
+    display.display();
   }
-  else {
-    const char* message = "...";
-    display.clearDisplay();
-    display.drawRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, SSD1306_WHITE);
-    display.setTextSize(1);
-    display.setCursor((SCREEN_WIDTH - strlen(message) * 6) / 2, (SCREEN_HEIGHT - 8) / 2);
-    display.printf("%s\n", message);
-  }
-  display.display();
-}
 
-class SinWave {
+  void reset() {}
+};
+
+class SinWave : public Face {
   int SIN_AMP = 24;
   int SIN_DIR = 1;
   float SIN_T = 0;
   float SIN_BALL_X = 0;
-
 
 public:
   void show() {
@@ -209,7 +217,6 @@ public:
   }
 
 };
-SinWave sinWave;
 
 void setup()
 {
@@ -231,12 +238,14 @@ void setup()
   display.setTextColor(SSD1306_WHITE);
 
   FACES[FACE_TYPE::FACE_DEEFAULT] = new DefaultFace();
+  FACES[FACE_TYPE::FACE_CLOCK] = new Clock();
+  FACES[FACE_TYPE::FACE_BINARY_CLOCK] = new BinaryClock();
+  FACES[FACE_TYPE::FACE_SIN_WAVE] = new SinWave();
 }
 
 void loop()
 {
   int state = digitalRead(SET_BUTTON_PIN);
-  Serial.println(CURRENT_FACE);
   if (state == LOW) {
     CURRENT_FACE = static_cast<FACE_TYPE>(
       (static_cast<int>(CURRENT_FACE) + 1) % FACES.size()
