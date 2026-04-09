@@ -56,6 +56,7 @@ enum FACE_TYPE {
   FACE_CLOCK,
   FACE_BINARY_CLOCK,
   FACE_SIN_WAVE,
+  FACE_LISSAJOUS_CURVE,
   FACE_COUNT
 };
 FACE_TYPE CURRENT_FACE = FACE_DEEFAULT;
@@ -217,6 +218,37 @@ public:
   }
 
 };
+class LissajousCurve : public Face {
+  float a = 1.0;
+  float b = 2.0;
+  float delta = PI / 2;
+  int dir = 1;
+
+public:
+  void show() {
+    display.clearDisplay();
+    for (int i = 0; i <= 4 * 360; i++) {
+      float theta = 0.25 * i * PI / 180;
+      int x = (SCREEN_WIDTH / 2) + ((SCREEN_WIDTH / 2) * sin(a * theta + delta));
+      int y = (SCREEN_HEIGHT / 2) + ((SCREEN_HEIGHT / 2) * sin(b * theta));
+      display.drawPixel(x, y, SSD1306_WHITE);
+    }
+
+    display.display();
+
+    delta += 0.01;
+    a += 0.01 * dir;
+    if (a >= 4.0 || a <= 1.0) {
+      dir *= -1;
+    }
+  }
+
+  void reset() {
+    a = 1;
+    b = 2;
+    delta = PI / 2;
+  }
+};
 
 void setup()
 {
@@ -241,6 +273,7 @@ void setup()
   FACES[FACE_TYPE::FACE_CLOCK] = new Clock();
   FACES[FACE_TYPE::FACE_BINARY_CLOCK] = new BinaryClock();
   FACES[FACE_TYPE::FACE_SIN_WAVE] = new SinWave();
+  FACES[FACE_TYPE::FACE_LISSAJOUS_CURVE] = new LissajousCurve();
 }
 
 void loop()
