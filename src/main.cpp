@@ -57,6 +57,7 @@ enum FACE_TYPE {
   FACE_BINARY_CLOCK,
   FACE_SIN_WAVE,
   FACE_LISSAJOUS_CURVE,
+  FACE_DVD,
   FACE_COUNT
 };
 FACE_TYPE CURRENT_FACE = FACE_DEEFAULT;
@@ -195,7 +196,8 @@ public:
       display.drawPixel(i, y, SSD1306_WHITE);
     }
 
-    float angle = SIN_BALL_X * 0.1;
+    float angle = 
+    SIN_BALL_X * 0.1;
     int y = 32 + SIN_AMP * sin(angle + SIN_T);
     display.drawCircle(SIN_BALL_X, y, 5, SSD1306_WHITE);
 
@@ -218,6 +220,50 @@ public:
   }
 
 };
+class DVD : public Face {
+  float x = 0;
+  float y = 0;
+
+  float boxHeight = 20;
+  float boxWidth = 30;
+
+  float xDir = 1;
+  float yDir = 1;
+
+
+
+public:
+  void show() {
+    display.clearDisplay();
+
+    display.drawRect(x, y, boxWidth, boxHeight, SSD1306_WHITE);
+
+    const char* text = "DVD";
+    int16_t tx, ty;
+    uint16_t tw, th;
+    display.getTextBounds(text, 0, 0, &tx, &ty, &tw, &th);
+
+    display.setCursor(x + (boxWidth - tw) / 2, y + (boxHeight - th) / 2);
+    display.setTextColor(SSD1306_WHITE);
+    display.print(text);
+
+    display.display();
+
+    if (x < 0 || x + boxWidth > 128) {
+      xDir *= -1;
+    }
+    if (y < 0 || y + boxHeight > 64) {
+      yDir *= -1;
+    }
+
+    x += 1 * xDir;
+    y += 1 * yDir;
+  }
+
+  void reset() {
+  }
+};
+
 class LissajousCurve : public Face {
   float a = 1.0;
   float b = 2.0;
@@ -274,6 +320,7 @@ void setup()
   FACES[FACE_TYPE::FACE_BINARY_CLOCK] = new BinaryClock();
   FACES[FACE_TYPE::FACE_SIN_WAVE] = new SinWave();
   FACES[FACE_TYPE::FACE_LISSAJOUS_CURVE] = new LissajousCurve();
+  FACES[FACE_TYPE::FACE_DVD] = new DVD();
 }
 
 void loop()
